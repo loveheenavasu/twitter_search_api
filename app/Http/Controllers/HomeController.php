@@ -30,7 +30,7 @@ class HomeController extends Controller
         if(!empty($searchKeyword)){
             $curl = curl_init();
             curl_setopt_array($curl, array(
-              CURLOPT_URL => 'https://api.twitter.com/1.1/search/tweets.json?count=100&result_type=popular&q='.$searchKeyword.' ',
+              CURLOPT_URL => 'https://api.twitter.com/1.1/search/tweets.json?count=100&lang=en&result_type=popular&q='.$searchKeyword.' ',
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -45,7 +45,7 @@ class HomeController extends Controller
             $response = curl_exec($curl);
             curl_close($curl);
             $result = (json_decode($response));
-            if(isset($result->statuses)){
+            if(isset($result->statuses) && !empty($result->statuses)){
                 $allResult = $result->statuses;
                 $j = 0;
                 $finalResult = [];
@@ -58,17 +58,21 @@ class HomeController extends Controller
                         $finalResult[$j]['retweets'] = $res->retweet_count;
                         $finalResult[$j]['likes'] = $res->favorite_count;
                         $finalResult[$j]['users'] = $res->user->profile_image_url;
+                        $finalResult[$j]['nothing'] = "No Result Found";
                     }
                     $j++;
                 } 
             }
         }
+
         if(isset($finalResult)){
             return view('searchResults')->with('searchresults',$finalResult);
         }
         else{
-            echo "nothing";
+            $finalResult = [];
+            return view('searchResults')->with('searchresults',$finalResult);
         }
+
     }
 
     

@@ -27,6 +27,13 @@
     max-width: 1070px;
     margin-left: auto;
 }
+.twitter-card-sec2 {
+    width: 100%;
+    max-width: 1070px;
+    margin-left: 450px;
+    margin-top: 145px;
+
+}
 
 .card.twitter-card {
     min-height: 245px;

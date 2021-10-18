@@ -26,7 +26,7 @@
                 	<i class="fa fa-refresh"></i> Refresh</button>
             </div>
        	</div> 
-        
+        @if(!empty($searchresults))
         <div class="row twitter-card-sec">
 	        @foreach($searchresults as $result)
 	        	<div class="column col-lg-4">
@@ -77,21 +77,27 @@
 			                      <div class="dropdown d-flex align-items-center pr-2">
 			                          <i class="fa fa-ellipsis-v" data-toggle="dropdown">
 			                          </i>
-			                          <div class="dropdown-menu">
-			                              <!-- <a target="_new" class="dropdown-item"
+			                          <!-- <div class="dropdown-menu">
+			                              <a target="_new" class="dropdown-item"
 			                                 href="">more</a>
 			                                 <a class="dropdown-item"
-			                                 href="">more</a> -->
+			                                 href="">more</a>
 			                              <button class="dropdown-item" type="button"></button>
-			                          </div>
+			                          </div> -->
 			                      </div>
 			                </div>
 			            </div>
 			    	</div>
 				</div>	
-				@endforeach
-			</div>
-         
+			@endforeach
+		</div>
+		@else
+		<div class="row twitter-card-sec2">	
+			<h3 class="contant_box_404">
+			No Result Found
+			</h3>
+		</div>	
+		@endif 
     </div>
 </div>
 
