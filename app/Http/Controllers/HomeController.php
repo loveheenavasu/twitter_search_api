@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use App\Models\SocialTwitterAccount;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -16,7 +17,7 @@ class HomeController extends Controller
     {
         return view('home');
     }
-    
+
     public function adminHome()
     {
         return view('adminHome');
@@ -30,7 +31,7 @@ class HomeController extends Controller
         if(!empty($searchKeyword)){
             $curl = curl_init();
             curl_setopt_array($curl, array(
-              CURLOPT_URL => 'https://api.twitter.com/1.1/search/tweets.json?count=100&lang=en&result_type=popular&q='.$searchKeyword.' ',
+              CURLOPT_URL => 'https://api.twitter.com/2/tweets/search/recent?max_results=30&query='.$searchKeyword.'&tweet.fields=author_id,created_at,referenced_tweets,public_metrics',
               CURLOPT_RETURNTRANSFER => true,
               CURLOPT_ENCODING => '',
               CURLOPT_MAXREDIRS => 10,
@@ -39,32 +40,83 @@ class HomeController extends Controller
               CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
               CURLOPT_CUSTOMREQUEST => 'GET',
               CURLOPT_HTTPHEADER => array(
-                'Authorization: Bearer AAAAAAAAAAAAAAAAAAAAAFQZUgEAAAAA8oIog9q1aP6gYIBM1bObD5nblAM%3DJkG6VjIIkIQSIXZ1xXAjysMqwsJeoXxvWJzJvtggW1oqXhJ4YM'
+                'Authorization: Bearer AAAAAAAAAAAAAAAAAAAAABHSUgEAAAAAxdx4BIWRLJOLwWiGFRUJKZIxwmA%3DzjkV4Ybtc5E0ft6EtLqaYYGEYviuo5U5wWemRVOeFK1iOS8KDL'
               ),
             ));
             $response = curl_exec($curl);
             curl_close($curl);
             $result = (json_decode($response));
-            if(isset($result->statuses) && !empty($result->statuses)){
-                $allResult = $result->statuses;
-                $j = 0;
-                $finalResult = [];
-                foreach($allResult as $key => $res){
-                    if($res->retweet_count>= 10 && $res->favorite_count >= 100)
-                    {
-                        $finalResult[$j]['created_at'] = $res->created_at;
-                        $finalResult[$j]['tweet_id'] = $res->id;
-                        $finalResult[$j]['text'] = $res->text;
-                        $finalResult[$j]['retweets'] = $res->retweet_count;
-                        $finalResult[$j]['likes'] = $res->favorite_count;
-                        $finalResult[$j]['users'] = $res->user->profile_image_url;
-                        $finalResult[$j]['nothing'] = "No Result Found";
+            $i=0;
+            foreach($result as $key => $res){
+                foreach($res as $key => $final){
+                    //echo "<pre>";print_r($final);
+                    if(isset($final->referenced_tweets)){
+                            $rid=$final->referenced_tweets[0]->id;
+                            $curl = curl_init();
+                            curl_setopt_array($curl, array(
+                              CURLOPT_URL => 'https://api.twitter.com/2/tweets/'.$rid.'?tweet.fields=author_id,created_at,text,public_metrics',
+                              CURLOPT_RETURNTRANSFER => true,
+                              CURLOPT_ENCODING => '',
+                              CURLOPT_MAXREDIRS => 100,
+                              CURLOPT_TIMEOUT => 0,
+                              CURLOPT_FOLLOWLOCATION => true,
+                              CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                              CURLOPT_CUSTOMREQUEST => 'GET',
+                              CURLOPT_HTTPHEADER => array(
+                                'Authorization: Bearer AAAAAAAAAAAAAAAAAAAAABHSUgEAAAAAxdx4BIWRLJOLwWiGFRUJKZIxwmA%3DzjkV4Ybtc5E0ft6EtLqaYYGEYviuo5U5wWemRVOeFK1iOS8KDL',
+                                'Cookie: guest_id=v1%3A163392723975046164; personalization_id="v1_qPiVyU/oxA4TY/lTTPFY5A=="'
+                              ),
+                            ));
+
+                            $response = curl_exec($curl);
+
+                            curl_close($curl);
+                            $userResult = json_decode($response);
+                           // echo "<pre>";print_r($userResult->data->public_metrics);die;
+                            if(isset($userResult->data->public_metrics)){
+                            if($userResult->data->public_metrics->retweet_count >= 10 && $userResult->data->public_metrics->like_count >= 100 ){
+                                $id = $userResult->data->author_id;
+                                $curl = curl_init();
+                                curl_setopt_array($curl, array(
+                                CURLOPT_URL => 'https://api.twitter.com/2/users/'.$id.'?user.fields=profile_image_url',
+                                CURLOPT_RETURNTRANSFER => true,
+                                CURLOPT_ENCODING => '',
+                                CURLOPT_MAXREDIRS => 100,
+                                CURLOPT_TIMEOUT => 0,
+                                CURLOPT_FOLLOWLOCATION => true,
+                                CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+                                CURLOPT_CUSTOMREQUEST => 'GET',
+                                CURLOPT_HTTPHEADER => array(
+                                    'Authorization: Bearer AAAAAAAAAAAAAAAAAAAAABHSUgEAAAAAxdx4BIWRLJOLwWiGFRUJKZIxwmA%3DzjkV4Ybtc5E0ft6EtLqaYYGEYviuo5U5wWemRVOeFK1iOS8KDL',
+                                    'Cookie: guest_id=v1%3A163392723975046164; personalization_id="v1_qPiVyU/oxA4TY/lTTPFY5A=="'
+                                ),
+                            ));
+                            $response = curl_exec($curl);
+
+                            curl_close($curl);
+                            $Finale = json_decode($response,true);
+                            //echo "<pre>";print_r($Finale);die;
+                            $finalResult[$i]['twitter_id'] =$final->id;;
+                            $profileImage = $Finale['data']['profile_image_url'];
+                            $finalResult[$i]['users'] = $profileImage;
+                            $finalResult[$i]['created_at'] = $userResult->data->created_at;
+                            $finalResult[$i]['text'] = $userResult->data->text;
+                            $finalResult[$i]['retweets'] = $userResult->data->public_metrics->retweet_count;
+                            $finalResult[$i]['likes'] = $userResult->data->public_metrics->like_count;
+                        }
                     }
-                    $j++;
-                } 
+
+                        
+                            
+                        
+                        
+                    }
+                    $i++;
+                }
             }
         }
-
+      
+        //echo "<pre>";print_r($finalResult);die;
         if(isset($finalResult)){
             return view('searchResults')->with('searchresults',$finalResult);
         }
@@ -72,8 +124,7 @@ class HomeController extends Controller
             $finalResult = [];
             return view('searchResults')->with('searchresults',$finalResult);
         }
-
     }
 
-    
+
 }

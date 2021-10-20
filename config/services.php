@@ -30,9 +30,9 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
     'twitter' => [
-        'client_id' => 'eDTnZR2oqW8dvfd3yhtemIpdd',
-        'client_secret' => 'zGitlnuy0Lcukdh9aRp8cOvTxJxN9MCiTy4zmDOnwoisMBK42F',
-        'redirect' => 'http://localhost:8000/callback',
+        'client_id' => 'FYCZxnzIKKAJUICR3Ro3vMWkQ',
+        'client_secret' => 'cBuITerlT787RVa5yXEuuz23AvgxfdS8E9CbCuywYMXlx7x4eq',
+        'redirect' => 'http://209.97.142.219:3001/callback',
         ],
 
 ];
